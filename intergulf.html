@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Intergulf</title>
+    <style>
+      body {
+          font-family: Arial, sans-serif;
+          max-width: 800px;
+          margin: 20px auto;
+          padding: 20px;
+          background-color: #f4f4f4;
+      }
+      h1 {
+          text-align: center;
+          color: #333;
+      }
+      .form-container {
+          background-color: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .form-group {
+          margin-bottom: 15px;
+      }
+      label {
+          display: block;
+          margin-bottom: 5px;
+          font-weight: bold;
+      }
+      input {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          box-sizing: border-box;
+      }
+      button {
+          background-color: #28a745;
+          color: #fff;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-right: 10px;
+      }
+      button:hover {
+          background-color: #218838;
+      }
+      .download-btn {
+          background-color: #007bff;
+          margin-top: 10px;
+      }
+      .download-btn:hover {
+          background-color: #0056b3;
+      }
+      .reset-btn {
+          background-color: #dc3545;
+          margin-top: 10px;
+      }
+      .reset-btn:hover {
+          background-color: #c82333;
+      }
+      .error {
+          color: red;
+          font-size: 14px;
+          margin-top: 5px;
+          display: none;
+      }
+      table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+          background-color: #fff;
+      }
+      th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+      }
+      th {
+          background-color: #f2f2f2;
+          font-weight: bold;
+      }
+      tr:nth-child(even) {
+          background-color: #f9f9f9;
+      }
+      svg {
+          width: 16px;
+          height: 16px;
+          fill: #fff;
+      }
+      .button-group {
+          display: flex;
+          gap: 10px;
+      }
+  </style>
+  </head>
+  <body>
+    <div style="display: flex; align-items: center">
+      <img src="intergulf.png" alt="Logo" style="height: 20dvh" />
+      <h1>Intergulf Data Entry</h1>
+    </div>
+    <div class="form-container">
+      <form id="clientForm">
+        <div class="form-group">
+          <label for="cpr">CPR</label>
+          <input type="text" id="cpr" name="cpr" required />
+          <div id="cprError" class="error">CPR already exists</div>
+        </div>
+        <div class="form-group">
+          <label for="clientName">Client Name</label>
+          <input type="text" id="clientName" name="clientName" required />
+        </div>
+        <div class="form-group">
+          <label for="childName">Child Name</label>
+          <input type="text" id="childName" name="childName" required />
+        </div>
+        <div class="form-group">
+          <label for="contactNumber">Contact Number</label>
+          <input type="tel" id="contactNumber" name="contactNumber" required />
+        </div>
+        <button type="submit">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+          </svg>
+          Add
+        </button>
+      </form>
+      <button class="download-btn" onclick="downloadCSV()">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+        </svg>
+        Download as CSV
+      </button>
+      <button class="reset-btn" onclick="confirmReset()">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"
+          />
+        </svg>
+        Reset Table
+      </button>
+    </div>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>CPR</th>
+          <th>Client Name</th>
+          <th>Child Name</th>
+          <th>Contact Number</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+      const form = document.getElementById('clientForm')
+      const tableBody = document.getElementById('tableBody')
+      const cprError = document.getElementById('cprError')
+      let clients = JSON.parse(localStorage.getItem('clients')) || []
+
+      // Load existing data into table
+      function loadTable() {
+        tableBody.innerHTML = ''
+        clients.forEach((client) => {
+          const row = document.createElement('tr')
+          row.innerHTML = `
+                    <td>${client.cpr}</td>
+                    <td>${client.clientName}</td>
+                    <td>${client.childName}</td>
+                    <td>${client.contactNumber}</td>
+                `
+          tableBody.appendChild(row)
+        })
+      }
+
+      // Check if CPR is unique
+      function isCprUnique(cpr) {
+        return !clients.some((client) => client.cpr === cpr)
+      }
+
+      // Handle form submission
+      form.addEventListener('submit', (e) => {
+        e.preventDefault()
+        const cpr = document.getElementById('cpr').value.trim()
+        const clientName = document.getElementById('clientName').value.trim()
+        const childName = document.getElementById('childName').value.trim()
+        const contactNumber = document
+          .getElementById('contactNumber')
+          .value.trim()
+
+        if (!isCprUnique(cpr)) {
+          cprError.style.display = 'block'
+          return
+        }
+
+        cprError.style.display = 'none'
+        const client = { cpr, clientName, childName, contactNumber }
+        clients.push(client)
+        localStorage.setItem('clients', JSON.stringify(clients))
+        loadTable()
+        form.reset()
+      })
+
+      // Download data as CSV
+      function downloadCSV() {
+        if (clients.length === 0) {
+          alert('No data to download')
+          return
+        }
+        const headers = ['CPR', 'Client Name', 'Child Name', 'Contact Number']
+        const csvContent = [
+          headers.join(','),
+          ...clients.map((client) =>
+            [
+              `"${client.cpr}"`,
+              `"${client.clientName}"`,
+              `"${client.childName}"`,
+              `"${client.contactNumber}"`
+            ].join(',')
+          )
+        ].join('\n')
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', 'client_data.csv')
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+
+      function confirmReset() {
+            if (confirm('Are you sure you want to reset the table? This will remove all data.')) {
+                clients = [];
+                localStorage.setItem('clients', JSON.stringify(clients));
+                loadTable();
+            }
+        }
+
+      // Initial table load
+      loadTable()
+    </script>
+  </body>
+</html>
